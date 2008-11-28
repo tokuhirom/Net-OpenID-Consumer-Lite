@@ -46,8 +46,8 @@ sub _check_authentication {
     my $ua = _ua();
     my $res = $ua->get($url);
     $res->is_success() or die "cannot load $url";
-    my $is_valid = Net::OpenID::Consumer::Lite::Util::parse_keyvalue($res->content)->{is_valid};
-    return $is_valid eq 'is_valid:true' ? 1 : 0;
+    my $content = $res->content;
+    return $content eq 'is_valid:true' ? 1 : 0;
 }
 
 sub handle_server_response {
