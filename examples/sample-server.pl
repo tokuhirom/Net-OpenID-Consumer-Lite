@@ -65,7 +65,7 @@ HTTP::Engine->new(
                         cancelled => sub {
                             return res(
                                 status  => 200,
-                                body    => 'user cancelled!',
+                                body    => '<div style="color:red">user cancelled</div>',
                             );
                         },
                         verified => sub {
@@ -94,6 +94,7 @@ HTTP::Engine->new(
                     status  => 200,
                     body    => tt strip q{
                         <!doctype html>
+                        <h1>OP list</h1>
                         <ul>
                         [% FOR op IN OP_MAP.keys %]
                         <li><a href="/?check=1&op=[% op | url %]">login by [% op | html %]</a></li>
