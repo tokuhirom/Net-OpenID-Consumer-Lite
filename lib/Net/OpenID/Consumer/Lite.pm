@@ -7,6 +7,7 @@ use LWP::UserAgent;
 use Carp ();
 
 my $TIMEOUT = 4;
+our $IGNORE_SSL_ERROR = 0;
 
 sub _ua {
     my $agent = "Net::OpenID::Consumer::Lite/$Net::OpenID::Consumer::Lite::VERSION";
@@ -21,23 +22,24 @@ sub _get {
     my $url = shift;
     my $ua = _ua();
     my $res = $ua->get($url);
-    if ( $res->header('Client-SSL-Warning') ) {
-        Carp::croak("invalid ssl? $url");
+    unless ($IGNORE_SSL_ERROR) {
+        if ( my $warnings = $res->header('Client-SSL-Warning') ) {
+            Carp::croak("invalid ssl? ${url}, ${warnings}");
+        }
     }
     unless ($res->is_success) {
-        Carp::croak("cannot get $url");
+        Carp::croak("cannot get $url : @{[ $res->status_line ]}");
     }
     $res;
 }
 
 sub check_url {
-    my ($class, $url, $return_to) = (shift, shift, shift);
+    my ($class, $server_url, $return_to) = (shift, shift, shift);
+    Carp::croak("missing params")      unless $return_to;
     Carp::croak("Too many parameters") if @_;
-    Carp::croak("this module supports only https: $url") unless $url =~ /^https/;
+    Carp::croak("this module supports only https: $server_url") unless $server_url =~ /^https/;
 
-    my $res = _get("${url}?openid.mode=checkid_immediate&openid.return_to=" . URI::Escape::uri_escape($return_to));
-    my $location = $res->base or die 'missing location';
-    return $location;
+    return "${server_url}?openid.mode=checkid_immediate&openid.return_to=" . URI::Escape::uri_escape($return_to);
 }
 
 sub _check_authentication {
@@ -51,7 +53,7 @@ sub _check_authentication {
     my $res = _get($url);
     $res->is_success() or die "cannot load $url";
     my $content = $res->content;
-    return $content eq 'is_valid:true' ? 1 : 0;
+    return _parse_keyvalue($content)->{is_valid} ? 1 : 0;
 }
 
 sub handle_server_response {
@@ -79,11 +81,27 @@ sub handle_server_response {
     }
 
     if ($class->_check_authentication($request)) {
-        return $callbacks{'verified'}->($request);
+        my $vident;
+        for my $key (split /,/, $request->{'openid.signed'}) {
+            $vident->{$key} = $request->{"openid.$key"};
+        }
+        return $callbacks{'verified'}->($vident);
     } else {
         return $callbacks{'error'}->();
     }
 }
+
+sub _parse_keyvalue {
+    my $reply = shift;
+    my %ret;
+    $reply =~ s/\r//g;
+    foreach ( split /\n/, $reply ) {
+        next unless /^(\S+?):(.*)/;
+        $ret{$1} = $2;
+    }
+    return \%ret;
+}
+
 
 1;
 __END__
@@ -92,16 +110,20 @@ __END__
 
 =head1 NAME
 
-Net::OpenID::Consumer::Lite -
+Net::OpenID::Consumer::Lite - openid consumer library for minimalist
 
 =head1 SYNOPSIS
 
     use Net::OpenID::Consumer::Lite;
     my $csr = Net::OpenID::Consumer::Lite->new();
-    Net::OpenID::Consumer::Lite->check_url(
+
+    # get check url
+    my $check_url = Net::OpenID::Consumer::Lite->check_url(
         'https://mixi.jp/openid_server.pl',   # openid server url
         'http://example.com/back_to_here',    # return url
     );
+
+    # handle response of OP
     Net::OpenID::Consumer::Lite->handle_server_response(
         $request => (
             not_openid => sub {
@@ -127,22 +149,31 @@ Net::OpenID::Consumer::Lite -
 
 =head1 DESCRIPTION
 
-Net::OpenID::Consumer::Lite is
+Net::OpenID::Consumer::Lite is limited version of OpenID consumer library.
+This module works fast.This module works well on rental server/CGI.
 
-    LIMITED.
-    BUT, LIGHTWEIGHT.
+This module depend to L<LWP::UserAgent>, (L<Net::SSL>|L<IO::Socket::SSL>) and L<URI>.
+This module doesn't depend to L<Crypt::DH>!!
 
-=head1 POINT!
+=head1 LIMITATION
 
-    only supports OpenID 2.0
-    only supports verified OPs
-    support CGI
+    This module supports OpenID 2.0 only.
+    This module supports SSL OPs only.
+    This module supports OP, that supports openid.mode=check_authentication.
+    This module doesn't care the XRDS Location. Please pass me the real openid server path.
+
+=head1 How to solve SSL Certifications Error
+
+If L<Crypt::SSLeay> or L<Net::SSLeay> says "Peer certificate not verified" or other error messages,
+please see the manual of your ssl libraries =) This is SSL library's problem.
 
 =head1 AUTHOR
 
 Tokuhiro Matsuno E<lt>tokuhirom@gmail.comE<gt>
 
 =head1 SEE ALSO
+
+L<Net::OpenID::Consumer>
 
 =head1 LICENSE
 
