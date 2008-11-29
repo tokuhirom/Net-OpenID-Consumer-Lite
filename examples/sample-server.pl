@@ -94,9 +94,11 @@ HTTP::Engine->new(
                     status  => 200,
                     body    => tt strip q{
                         <!doctype html>
+                        <ul>
                         [% FOR op IN OP_MAP.keys %]
-                        <a href="/?check=1&op=[% op | url %]">login by [% op | html %]</a>
+                        <li><a href="/?check=1&op=[% op | url %]">login by [% op | html %]</a></li>
                         [% END %]
+                        </ul>
                     }
                 );
             }
