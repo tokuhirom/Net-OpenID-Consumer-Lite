@@ -32,6 +32,7 @@ HTTP::Engine->new(
         request_handler => sub {
             my $req = shift;
             if ($req->params->{check}) {
+                # do login(step 2)
                 my $op = $req->params->{op} or die "missing parameter";
                 my $server_url = $OP_MAP->{$op};
                 my $check_url = Net::OpenID::Consumer::Lite->check_url(
@@ -45,6 +46,7 @@ HTTP::Engine->new(
                     },
                 );
             } elsif ($req->params->{back}) {
+                # handle OP server response(step 3)
                 warn "your SSL Socket class is $Net::HTTPS::SSL_SOCKET_CLASS\n";
                 Net::OpenID::Consumer::Lite->handle_server_response(
                     $req->params() => (
@@ -87,6 +89,7 @@ HTTP::Engine->new(
                     )
                 );
             } else {
+                # select OP(step 1)
                 return res(
                     status  => 200,
                     body    => tt strip q{
