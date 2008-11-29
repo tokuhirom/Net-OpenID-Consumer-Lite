@@ -15,12 +15,26 @@ sub new {
 }
 
 sub _ua {
-    LWP::UserAgent->new(
-        agent =>
-          "Net::OpenID::Consumer::Lite/$Net::OpenID::Consumer::Lite::VERSION",
+    my $self = shift;
+    my $agent = "Net::OpenID::Consumer::Lite/$Net::OpenID::Consumer::Lite::VERSION";
+    $self->{ua} ||= LWP::UserAgent->new(
+        agent        => $agent,
         timeout      => $TIMEOUT,
         max_redirect => 0,
     );
+}
+
+sub _get {
+    my ($self, $url) = @_;
+    my $ua = $self->_ua();
+    my $res = $ua->get($url);
+    if ( $res->header('Client-SSL-Warning') ) {
+        Carp::croak("invalid ssl? $url");
+    }
+    unless ($res->is_success) {
+        Carp::croak("cannot get $url");
+    }
+    $res;
 }
 
 sub check_url {
@@ -28,9 +42,7 @@ sub check_url {
     Carp::croak("Too many parameters") if @_;
     Carp::croak("unknown op: $url") unless $self->{op_list}->{$url};
 
-    my $ua = _ua();
-    my $res = $ua->get("${url}?openid.mode=checkid_immediate&openid.return_to=" . URI::Escape::uri_escape($return_to));
-    $res->is_success() or die $res->content;
+    my $res = $self->_get("${url}?openid.mode=checkid_immediate&openid.return_to=" . URI::Escape::uri_escape($return_to));
     my $location = $res->base or die 'missing location';
     return $location;
 }
@@ -43,8 +55,7 @@ sub _check_authentication {
         $request_url->query_form(%$request);
         $request_url;
     };
-    my $ua = _ua();
-    my $res = $ua->get($url);
+    my $res = $self->_get($url);
     $res->is_success() or die "cannot load $url";
     my $content = $res->content;
     return $content eq 'is_valid:true' ? 1 : 0;

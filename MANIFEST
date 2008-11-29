@@ -1,3 +1,4 @@
+bin/find-openid-server.pl
 Changes
 inc/Module/Install.pm
 inc/Module/Install/AuthorTests.pm
@@ -23,6 +24,7 @@ MANIFEST			This list of files
 META.yml
 README
 t/00_compile.t
+xt/001_mixi.t
 xt/01_podspell.t
 xt/02_perlcritic.t
 xt/03_pod.t
