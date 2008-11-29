@@ -4,8 +4,7 @@ use Test::More tests => 2;
 use Net::OpenID::Consumer::Lite;
 
 eval {
-    my $con = Net::OpenID::Consumer::Lite->new();
-    $con->_get('https://www.hokkoku.cns-jp.com/');
+    Net::OpenID::Consumer::Lite::_get('https://www.hokkoku.cns-jp.com/');
 };
 my $e = $@;
 ok $e;

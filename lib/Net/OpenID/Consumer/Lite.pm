@@ -8,16 +8,9 @@ use Carp ();
 
 my $TIMEOUT = 4;
 
-sub new {
-    my ($class, %args) = @_;
-    $args{op_list} = +{ map { $_ => 1 } @{$args{op_list}} };
-    bless {%args}, $class;
-}
-
 sub _ua {
-    my $self = shift;
     my $agent = "Net::OpenID::Consumer::Lite/$Net::OpenID::Consumer::Lite::VERSION";
-    $self->{ua} ||= LWP::UserAgent->new(
+    LWP::UserAgent->new(
         agent        => $agent,
         timeout      => $TIMEOUT,
         max_redirect => 0,
@@ -25,8 +18,8 @@ sub _ua {
 }
 
 sub _get {
-    my ($self, $url) = @_;
-    my $ua = $self->_ua();
+    my $url = shift;
+    my $ua = _ua();
     my $res = $ua->get($url);
     if ( $res->header('Client-SSL-Warning') ) {
         Carp::croak("invalid ssl? $url");
@@ -38,31 +31,31 @@ sub _get {
 }
 
 sub check_url {
-    my ($self, $url, $return_to) = (shift, shift, shift);
+    my ($class, $url, $return_to) = (shift, shift, shift);
     Carp::croak("Too many parameters") if @_;
-    Carp::croak("unknown op: $url") unless $self->{op_list}->{$url};
+    Carp::croak("this module supports only https: $url") unless $url =~ /^https/;
 
-    my $res = $self->_get("${url}?openid.mode=checkid_immediate&openid.return_to=" . URI::Escape::uri_escape($return_to));
+    my $res = _get("${url}?openid.mode=checkid_immediate&openid.return_to=" . URI::Escape::uri_escape($return_to));
     my $location = $res->base or die 'missing location';
     return $location;
 }
 
 sub _check_authentication {
-    my ($self, $request) = @_;
+    my ($class, $request) = @_;
     my $url = do {
         $request->{'openid.mode'} = 'check_authentication';
         my $request_url = URI->new($request->{'openid.op_endpoint'});
         $request_url->query_form(%$request);
         $request_url;
     };
-    my $res = $self->_get($url);
+    my $res = _get($url);
     $res->is_success() or die "cannot load $url";
     my $content = $res->content;
     return $content eq 'is_valid:true' ? 1 : 0;
 }
 
 sub handle_server_response {
-    my $self = shift;
+    my $class = shift;
     my $request = shift;
     my %callbacks_in = @_;
     my %callbacks = ();
@@ -85,7 +78,7 @@ sub handle_server_response {
         return $callbacks{'setup_required'}->($url);
     }
 
-    if ($self->_check_authentication($request)) {
+    if ($class->_check_authentication($request)) {
         return $callbacks{'verified'}->($request);
     } else {
         return $callbacks{'error'}->();
@@ -104,28 +97,32 @@ Net::OpenID::Consumer::Lite -
 =head1 SYNOPSIS
 
     use Net::OpenID::Consumer::Lite;
-    my $csr = Net::OpenID::Consumer::Lite->new(
-        op_list => ['https://mixi.jp/openid_server.pl'] # usable OP list
+    my $csr = Net::OpenID::Consumer::Lite->new();
+    Net::OpenID::Consumer::Lite->check_url(
+        'https://mixi.jp/openid_server.pl',   # openid server url
+        'http://example.com/back_to_here',    # return url
     );
-    $csr->handle_server_response(
-        not_openid => sub {
-            die "Not an OpenID message";
-        },
-        setup_required => sub {
-            my $setup_url = shift;
-            # Redirect the user to $setup_url
-        },
-        cancelled => sub {
-            # Do something appropriate when the user hits "cancel" at the OP
-        },
-        verified => sub {
-            my $vident = shift;
-            # Do something with the VerifiedIdentity object $vident
-        },
-        error => sub {
-            my $err = shift;
-            die($err);
-        },
+    Net::OpenID::Consumer::Lite->handle_server_response(
+        $request => (
+            not_openid => sub {
+                die "Not an OpenID message";
+            },
+            setup_required => sub {
+                my $setup_url = shift;
+                # Redirect the user to $setup_url
+            },
+            cancelled => sub {
+                # Do something appropriate when the user hits "cancel" at the OP
+            },
+            verified => sub {
+                my $vident = shift;
+                # Do something with the VerifiedIdentity object $vident
+            },
+            error => sub {
+                my $err = shift;
+                die($err);
+            },
+        )
     );
 
 =head1 DESCRIPTION
