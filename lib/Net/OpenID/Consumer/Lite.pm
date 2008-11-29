@@ -110,7 +110,7 @@ __END__
 
 =head1 NAME
 
-Net::OpenID::Consumer::Lite - openid consumer library for minimalist
+Net::OpenID::Consumer::Lite - OpenID consumer library for minimalist
 
 =head1 SYNOPSIS
 
@@ -119,7 +119,7 @@ Net::OpenID::Consumer::Lite - openid consumer library for minimalist
 
     # get check url
     my $check_url = Net::OpenID::Consumer::Lite->check_url(
-        'https://mixi.jp/openid_server.pl',   # openid server url
+        'https://mixi.jp/openid_server.pl',   # OpenID server url
         'http://example.com/back_to_here',    # return url
     );
 
@@ -159,13 +159,12 @@ This module doesn't depend to L<Crypt::DH>!!
 
     This module supports OpenID 2.0 only.
     This module supports SSL OPs only.
-    This module supports OP, that supports openid.mode=check_authentication.
-    This module doesn't care the XRDS Location. Please pass me the real openid server path.
+    This module doesn't care the XRDS Location. Please pass me the real OpenID server path.
 
 =head1 How to solve SSL Certifications Error
 
 If L<Crypt::SSLeay> or L<Net::SSLeay> says "Peer certificate not verified" or other error messages,
-please see the manual of your ssl libraries =) This is SSL library's problem.
+please see the manual of your SSL libraries =) This is SSL library's problem.
 
 =head1 AUTHOR
 
