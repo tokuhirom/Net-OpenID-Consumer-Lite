@@ -1,5 +1,6 @@
 bin/find-openid-server.pl
 Changes
+examples/sample-server.pl
 inc/Module/Install.pm
 inc/Module/Install/AuthorTests.pm
 inc/Module/Install/Base.pm
@@ -25,6 +26,7 @@ META.yml
 README
 t/00_compile.t
 xt/001_mixi.t
+xt/002_ssl_check.t
 xt/01_podspell.t
 xt/02_perlcritic.t
 xt/03_pod.t
