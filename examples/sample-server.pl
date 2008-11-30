@@ -38,6 +38,9 @@ HTTP::Engine->new(
                 my $check_url = Net::OpenID::Consumer::Lite->check_url(
                     $server_url,
                     "http://${host}:$port/?back=1",
+                    {
+                        "http://openid.net/extensions/sreg/1.1" => { required => join( ",", qw/email nickname/ ) }
+                    }
                 );
                 return res(
                     status  => 302,
