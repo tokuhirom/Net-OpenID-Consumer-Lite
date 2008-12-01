@@ -176,9 +176,11 @@ This module doesn't depend to L<Crypt::DH>!!
 
 =head1 LIMITATION
 
-    This module supports OpenID 2.0 only.
     This module supports SSL OPs only.
     This module doesn't care the XRDS Location. Please pass me the real OpenID server path.
+    This module doesn't supports XRI.
+    This module doesn't supports Endpoind discovery.
+    This module doesn't supports association for signature validation.
 
 =head1 How to solve SSL Certifications Error
 
