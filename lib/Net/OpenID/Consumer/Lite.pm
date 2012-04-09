@@ -2,7 +2,7 @@ package Net::OpenID::Consumer::Lite;
 use strict;
 use warnings;
 use 5.00800;
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 use LWP::UserAgent;
 use Carp ();
 
@@ -23,6 +23,7 @@ sub _get {
     my $ua = _ua();
     my $res = $ua->get($url);
     unless ($IGNORE_SSL_ERROR) {
+    use Data::Dumper; warn Dumper($res);
         if ( my $warnings = $res->header('Client-SSL-Warning') ) {
             Carp::croak("invalid ssl? ${url}, ${warnings}");
         }

@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::OpenID::Consumer::Lite
 
+0.03
+
+    - fixed packaging
+
 0.02
 
         - added extensions support
