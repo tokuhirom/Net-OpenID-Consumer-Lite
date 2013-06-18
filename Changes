@@ -1,5 +1,7 @@
 Revision history for Perl extension Net::OpenID::Consumer::Lite
 
+{{$NEXT}}
+
 0.03
 
     - fixed packaging
