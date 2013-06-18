@@ -2,6 +2,11 @@ Revision history for Perl extension Net::OpenID::Consumer::Lite
 
 {{$NEXT}}
 
+0.04 2013-06-18T10:11:23Z
+
+    - fixed deps
+      (michielb++)
+
 0.03
 
     - fixed packaging
