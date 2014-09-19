@@ -23,7 +23,6 @@ sub _get {
     my $ua = _ua();
     my $res = $ua->get($url);
     unless ($IGNORE_SSL_ERROR) {
-    use Data::Dumper; warn Dumper($res);
         if ( my $warnings = $res->header('Client-SSL-Warning') ) {
             Carp::croak("invalid ssl? ${url}, ${warnings}");
         }
